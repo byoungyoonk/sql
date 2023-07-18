@@ -1,0 +1,64 @@
+--(Prerequisite knowledge)
+WHen making the product master using SQL, the smallest unit is shop_information(shopid),item_information(itemid)
+in the product master. In other words, they must be Unique.
+
+step1)
+
+SELECT
+
+CASE WHEN COUNT(DISTINCT CONCAT(shopid,itemid)) =COUNT(CONCAT(shopid,itemid)) THEN TRUE ELSE FALSE END AS shop_id_item_id_checking
+
+FROM product_master
+
+step2)
+
+②When The result is True
+WITH
+  base AS (
+  SELECT
+    CONCAT(shopid,itemid) AS key
+  FROM
+    product_master
+  GROUP BY
+    1
+  HAVING
+    COUNT(CONCAT(shopid,itemid)) >=2 )
+SELECT
+  *
+FROM
+  product_master
+WHERE
+  CONCAT(shopid,itemid) IN (SELECT key FROM base)
+
+step3)
+
+③If you want to delete duplicate data
+patten1）If all duplicate data values are the same
+CREATE OR REPLACE TABLE
+   product_master AS (
+  SELECT
+    DISTINCT *
+  FROM
+    product_master)
+
+patten2）Duplicate data with different values, e.g., item_name
+Numbering by line
+CREATE OR REPLACE TABLE
+  product_master AS (
+  SELECT
+    ROW_NUMBER() OVER() AS num
+    ,*
+  FROM
+   product_master )
+
+After confirming the num of duplicate deletion targets, delete the duplicate.
+CREATE OR REPLACE TABLE
+  product_master AS (
+  SELECT
+
+    *
+    
+  FROM
+    product_master
+  WHERE 
+   num NOT IN (1,2,3) )
